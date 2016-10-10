@@ -1,0 +1,7 @@
+{
+    "projects": [
+        "FluentSocket.Core",
+        "FluentSocket.Example",
+        "FluentSocket.Tests"
+    ]
+}
