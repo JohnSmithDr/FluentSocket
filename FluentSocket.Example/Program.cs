@@ -32,7 +32,7 @@ namespace FluentSocket.Example
         {
             var server = NetSocketFactory.Default.CreateServer();
 
-            server.OnConnection()
+            server.OnConnections()
                 .Subscribe(conn => {
                     var received = conn.BeginReceive(BufferSize);
                     conn.BeginSend(received);

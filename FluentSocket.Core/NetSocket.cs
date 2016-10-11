@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FluentSocket
 {
-    public class NetFluentSocket : ISocket
+    public class NetSocket : ISocket
     {
         private Task _receivingTask;
         private CancellationTokenSource _receivingCancellation;  
@@ -16,11 +16,14 @@ namespace FluentSocket
         private Subject<Unit> _closedSubject;
         private IDisposable _sendSubscription;
 
+        public event EventHandler Closed;
+
         public Socket Socket { get; }
+        public bool IsConnected { get; } = true;
         public NetEndPoint LocalEndPoint { get; }
         public NetEndPoint RemoteEndPoint { get; }
 
-        public NetFluentSocket (Socket socket)
+        public NetSocket (Socket socket)
         {
             Socket = socket;
             LocalEndPoint = Socket.LocalEndPoint.ToNetEndPoint();

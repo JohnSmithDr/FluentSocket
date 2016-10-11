@@ -1,40 +1,28 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Reactive;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FluentSocket
 {
-    public class NetFluentSocketServer : ISocketServer
+    public class NetSocketServer : ISocketServer
     {
-        private Subject<Unit> _closeSubject;
-        private Subject<ISocket> _connectionSubject;
         private TcpListener _listener;
 
+        public event EventHandler Listening;
+        public event EventHandler Closed;
+        public event EventHandler<SocketConnectionEventArgs> Connected;
+
         public NetEndPoint LocalEndPoint { get; private set; }
-
-        public IObservable<Unit> OnClosed()
-        {
-            if (_closeSubject == null)
-                _closeSubject = new Subject<Unit>();
-            return _closeSubject;
-        }
-
-        public IObservable<ISocket> OnConnection()
-        {
-            if (_connectionSubject == null)
-                _connectionSubject = new Subject<ISocket>();
-            return _connectionSubject;
-        }
 
         public Task ListenAsync(int port)
         {
             var ep = new IPEndPoint(IPAddress.Any, port);
             _listener = new TcpListener(ep);
             _listener.Start();
+
+            Listening?.Invoke(this, EventArgs.Empty);
 
             return Task.Factory
                 .StartNew(
@@ -47,20 +35,17 @@ namespace FluentSocket
 
         public void Close()
         {
-            _listener?.Stop();
-            _listener = null;
-            _closeSubject?.OnNext(Unit.Default);
+            if (_listener != null) 
+            {
+                _listener?.Stop();
+                _listener = null;
+                Closed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Dispose()
         {
             Close();
-
-            _connectionSubject?.TryDispose();
-            _connectionSubject = null;
-
-            _closeSubject?.TryDispose();
-            _closeSubject = null;
         }
 
         private async Task ListenSocketsAsync()
@@ -70,11 +55,13 @@ namespace FluentSocket
                 try
                 {
                     var socket = await _listener.AcceptSocketAsync();
-                    var fluentSocket = new NetFluentSocket(socket);
-                    _connectionSubject?.OnNext(fluentSocket);
+                    var newSocket = new NetSocket(socket);
+                    Connected?.Invoke(this, new SocketConnectionEventArgs(newSocket));
                 }
                 catch
                 {
+                    // close tcp listener may cause exception
+                    // TODO: check tcp listener state and raise closed event here
                     return;
                 }
             }

@@ -15,9 +15,9 @@ namespace FluentSocket
         {
             var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(host, port);
-            return new NetFluentSocket(socket);
+            return new NetSocket(socket);
         }
 
-        public ISocketServer CreateServer() => new NetFluentSocketServer();
+        public ISocketServer CreateServer() => new NetSocketServer();
     }
 }

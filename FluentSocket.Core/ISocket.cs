@@ -7,12 +7,14 @@ namespace FluentSocket
 {
     public interface ISocket : IDisposable
     {
+        event EventHandler Closed;
+
+        bool IsConnected { get; }
         NetEndPoint LocalEndPoint { get; }
         NetEndPoint RemoteEndPoint { get; }
 
         Stream GetInputStream();
         Stream GetOutputStream();
-        IObservable<Unit> OnClosed();
         IObservable<Buffer> BeginReceive(int bufferSize);
         IDisposable BeginSend(IObservable<Buffer> buffers);
         Task<int> SendAsync(byte[] buffer);
