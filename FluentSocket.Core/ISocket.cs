@@ -10,13 +10,15 @@ namespace FluentSocket
         event EventHandler Closed;
 
         bool IsConnected { get; }
+        int SendBufferSize { get; }
+        int ReceiveBufferSize { get; }
         NetEndPoint LocalEndPoint { get; }
         NetEndPoint RemoteEndPoint { get; }
 
+        ISocket SetSendBufferSize(int bufferSize);
+        ISocket SetReceiveBufferSize(int bufferSize);
         Stream GetInputStream();
         Stream GetOutputStream();
-        IObservable<Buffer> BeginReceive(int bufferSize);
-        IDisposable BeginSend(IObservable<Buffer> buffers);
         Task<int> SendAsync(byte[] buffer);
         Task<int> SendAsync(byte[] buffer, int offset, int count);
         Task<int> ReceiveAsync(byte[] buffer);
