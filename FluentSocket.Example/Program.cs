@@ -5,6 +5,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentSocket.Reactive;
 
 namespace FluentSocket.Example
 {
@@ -34,7 +35,7 @@ namespace FluentSocket.Example
 
             server.OnConnections()
                 .Subscribe(conn => {
-                    var received = conn.BeginReceive(BufferSize);
+                    var received = conn.SetReceiveBufferSize(BufferSize).BeginReceive();
                     conn.BeginSend(received);
 
                     received.Subscribe(d => {
@@ -57,9 +58,14 @@ namespace FluentSocket.Example
             
             var toSend = new Subject<string>();
                 
-            client.BeginSend(toSend.Select(x => Buffer.FromString(x, Encoding)));
+            client
+                .SetSendBufferSize(BufferSize)
+                .BeginSend(toSend.Select(x => Buffer.FromString(x, Encoding)));
 
-            client.BeginReceive(BufferSize).Subscribe(d => Console.WriteLine("> {0}", d.ToString(Encoding)));
+            client
+                .SetReceiveBufferSize(BufferSize)
+                .BeginReceive()
+                .Subscribe(d => Console.WriteLine("> {0}", d.ToString(Encoding)));
 
             client.OnClosed().Subscribe(x => Console.WriteLine("bye bye !!!"));
 
