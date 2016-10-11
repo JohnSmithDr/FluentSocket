@@ -104,6 +104,7 @@ namespace FluentSocket
                         {
                             await ProcessReceivingAsync(_receivingSubject, _receivingCancellation.Token);
                             if (!Socket.Connected) _closedSubject.OnNext(Unit.Default);
+                            // TODO: test socket connection and raise closed
                             _receivingSubject.OnCompleted();
                             _receivingCancellation.TryDispose();
                             _receivingCancellation = null;
