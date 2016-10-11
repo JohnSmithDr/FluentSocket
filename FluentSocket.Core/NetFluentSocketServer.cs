@@ -49,7 +49,7 @@ namespace FluentSocket
         {
             _listener?.Stop();
             _listener = null;
-            _closeSubject.OnNext(Unit.Default);
+            _closeSubject?.OnNext(Unit.Default);
         }
 
         public void Dispose()

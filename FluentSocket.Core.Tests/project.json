@@ -4,6 +4,9 @@
     "debugType": "portable"
   },
   "dependencies": {
+    "FluentSocket.Core": { 
+      "target": "project"
+    },
     "System.Runtime.Serialization.Primitives": "4.1.1",
     "xunit": "2.2.0-*",
     "xunit.runner.console": "2.2.0-*",
