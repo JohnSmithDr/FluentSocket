@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace FluentSocket.Reactive
 {
-    public static class SocketExtensions
+    public static class ReactiveSocketExtensions
     {
         public static IDisposable BeginSend(this ISocket socket, IObservable<Buffer> buffers)
             => BeginSend(socket, buffers, null);

@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 
 namespace FluentSocket.Reactive
 {
-    public static class SocketServerExtension
+    public static class ReactiveSocketServerExtension
     {
         public static IObservable<Unit> OnListening(this ISocketServer server)
         {
