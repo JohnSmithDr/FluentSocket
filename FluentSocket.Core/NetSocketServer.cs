@@ -61,8 +61,6 @@ namespace FluentSocket
                 }
                 catch
                 {
-                    // close tcp listener may cause exception
-                    // TODO: check tcp listener state and raise closed event here
                     return;
                 }
             }
