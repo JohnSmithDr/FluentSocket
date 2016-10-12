@@ -34,7 +34,7 @@ namespace FluentSocket.Reactive
         public static IObservable<Unit> OnClosed(this ISocket socket)
         {
             return Observable
-                .FromEvent<EventHandler, EventArgs>(h => socket.Closed += h, h => socket.Closed -= h)
+                .FromEventPattern<EventHandler, EventArgs>(h => socket.Closed += h, h => socket.Closed -= h)
                 .Select(x => Unit.Default); 
         }
     }
