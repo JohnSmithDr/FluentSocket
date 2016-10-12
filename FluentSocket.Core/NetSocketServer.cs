@@ -22,6 +22,7 @@ namespace FluentSocket
             _listener = new TcpListener(ep);
             _listener.Start();
 
+            LocalEndPoint = _listener.LocalEndpoint?.ToNetEndPoint();
             Listening?.Invoke(this, EventArgs.Empty);
 
             return Task.Factory

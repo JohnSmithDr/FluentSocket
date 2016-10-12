@@ -1,6 +1,7 @@
 ﻿using Xunit;
 using FluentSocket;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Tests
 {
@@ -9,15 +10,22 @@ namespace Tests
         const int ServerPort = 3000;
 
         [Fact]
-        public async Task TestListenAsync()
+        public void TestListen()
         {
-            var server = NetSocketFactory.Default.CreateServer();
-            var run = server.ListenAsync(ServerPort);
-            await Task.Delay(50);
-            //Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
-            //Assert.Equal(ServerPort.ToString(), server.LocalEndPoint.Port);
-            server.Close();
-            server.Dispose();
+            using (var signal = new AutoResetEvent(false))
+            using (var server = NetSocketFactory.Default.CreateServer())
+            {
+                server.Listening += (s, e) => 
+                {
+                    signal.Set();
+                };
+
+                var run = server.ListenAsync(ServerPort);
+                signal.WaitOne(2000);
+                Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
+                Assert.Equal(ServerPort.ToString(), server.LocalEndPoint.Port);
+                server.Close();
+            }
         }
 
         [Fact]
