@@ -35,9 +35,6 @@ namespace FluentSocket
             }
         }
 
-        public static Task<int> SendAsync(this Socket socket, byte[] buffer)
-            => SendAsync(socket, buffer, 0, buffer.Length);
-
         public static async Task<int> SendAsync(this Socket socket, byte[] buffer, int offset, int count)
         {
             var tcs = new TaskCompletionSource<int>();
