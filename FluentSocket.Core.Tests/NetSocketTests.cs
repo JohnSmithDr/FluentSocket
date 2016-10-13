@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using System.Text;
 using System.Threading.Tasks;
 using FluentSocket;
 using FluentSocket.Reactive;
@@ -14,11 +15,15 @@ namespace Tests
         private ISocketServer Server { get; } = NetSocketFactory.Default.CreateServer();
         private HashSet<ISocket> Clients { get; } = new HashSet<ISocket>();
         private CompositeDisposable Disposes { get; } = new CompositeDisposable();
+        private Encoding Encoding { get; } = Encoding.UTF8;
         
         public NetSocketTests()
         {
             Server.OnConnections()
-              .Subscribe(x => x.AddInto(Clients))
+              .Subscribe(x => {
+                  x.AddInto(Clients);
+                  x.BeginSend(x.BeginReceive());
+              })
               .AddInto(Disposes);
 
             Server.ListenAsync(Port).ConfigureAwait(false);
@@ -68,6 +73,25 @@ namespace Tests
             {
                 Assert.NotNull(inputStream);
                 Assert.NotNull(outputStream);
+                client.Close();
+            }
+        }
+
+        [Fact]
+        public async Task TestSendReceive()
+        {
+            using (var client = await NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port))
+            using (var inputStream = client.GetInputStream())
+            using (var outputStream = client.GetOutputStream())
+            {
+                var toSend = FluentSocket.Buffer.FromString("Hello World", Encoding);
+                var send = await client.SendAsync(toSend.GetBytes());
+                Assert.Equal(toSend.Length, send);
+
+                var buffer = new byte[1024];
+                var receive = await client.ReceiveAsync(buffer);
+                Assert.Equal(toSend.Length, receive);
+                
                 client.Close();
             }
         }

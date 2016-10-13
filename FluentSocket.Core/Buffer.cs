@@ -11,6 +11,7 @@ namespace FluentSocket
             _bytes = bytes;
         }
 
+        public int Length => _bytes.Length;
         public byte[] GetBytes() => _bytes;
 
         public string ToString(Encoding encoding) => encoding.GetString(_bytes);
