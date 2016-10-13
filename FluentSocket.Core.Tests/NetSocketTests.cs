@@ -51,7 +51,7 @@ namespace Tests
             {
                 client.Closed += (s, e) => signal.Set();
                 client.Close();
-                signal.WaitOne();
+                signal.WaitOne(2000);
             }
         }
 
@@ -63,7 +63,7 @@ namespace Tests
             using (var subClosed = client.OnClosed().Subscribe(x => signal.Set()))
             {
                 client.Close();
-                signal.WaitOne();
+                signal.WaitOne(2000);
             }
         }
 
