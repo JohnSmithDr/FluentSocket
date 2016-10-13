@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentSocket;
 using FluentSocket.Reactive;
@@ -40,6 +41,30 @@ namespace Tests
 
             Server?.Close();
             Server?.Dispose();
+        }
+
+        [Fact]
+        public async Task TestClosed()
+        {
+            using (var signal = new AutoResetEvent(false))
+            using (var client = await NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port))
+            {
+                client.Closed += (s, e) => signal.Set();
+                client.Close();
+                signal.WaitOne();
+            }
+        }
+
+        [Fact]
+        public async Task TestOnClosed()
+        {
+            using (var signal = new AutoResetEvent(false))
+            using (var client = await NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port))
+            using (var subClosed = client.OnClosed().Subscribe(x => signal.Set()))
+            {
+                client.Close();
+                signal.WaitOne();
+            }
         }
 
         [Fact]
