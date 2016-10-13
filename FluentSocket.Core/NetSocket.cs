@@ -48,7 +48,7 @@ namespace FluentSocket
             => Socket.ReceiveAsync(buffer, 0, buffer.Length);
             
         public Task<int> ReceiveAsync(byte[] buffer, int offset, int count)
-            => Socket.SendAsync(buffer, offset, count);
+            => Socket.ReceiveAsync(buffer, offset, count);
 
         public void Close()
         {

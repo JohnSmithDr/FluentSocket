@@ -80,22 +80,35 @@ namespace Tests
         [Fact]
         public async Task TestSendReceive()
         {
+            int bufferSize = 1024;
+            string message = "Hello World";
+
             using (var client = await NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port))
             using (var inputStream = client.GetInputStream())
             using (var outputStream = client.GetOutputStream())
             {
-                var toSend = FluentSocket.Buffer.FromString("Hello World", Encoding);
+                client.SetSendBufferSize(bufferSize).SetReceiveBufferSize(bufferSize);
+
+                var toSend = FluentSocket.Buffer.FromString(message, Encoding);
                 var send = await client.SendAsync(toSend.GetBytes());
                 Assert.Equal(toSend.Length, send);
 
-                var buffer = new byte[1024];
+                var buffer = new byte[bufferSize];
                 var receive = await client.ReceiveAsync(buffer);
                 Assert.Equal(toSend.Length, receive);
-                
+                Assert.Equal(message, FluentSocket.Buffer.FromBytes(buffer, 0, receive).ToString(Encoding));
+
+                send = await client.SendAsync(toSend.GetBytes(), 0, toSend.Length);
+                Assert.Equal(toSend.Length, send);
+
+                buffer = new byte[bufferSize];
+                receive = await client.ReceiveAsync(buffer, 0, buffer.Length);
+                Assert.Equal(toSend.Length, receive);
+                Assert.Equal(message, FluentSocket.Buffer.FromBytes(buffer, 0, receive).ToString(Encoding));
+
                 client.Close();
             }
         }
-
     }
 
 }
