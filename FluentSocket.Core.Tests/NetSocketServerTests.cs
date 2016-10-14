@@ -13,31 +13,31 @@ namespace Tests
         {
             int port = 3000;
 
-            using (var listeningSignal = new AutoResetEvent(false))
-            using (var closedSignal = new AutoResetEvent(false))
-            using (var connectedSignal = new AutoResetEvent(false))
+            using (var signal = new AutoResetEvent(false))
             using (var server = NetSocketFactory.Default.CreateServer())
             {
                 ISocket connectedSocket = null;
                 ISocket clientSocket = null;
 
-                server.Listening += (s, e) => listeningSignal.Set();
-
-                server.Closed += (s, e) => closedSignal.Set();
+                server.Listening += (s, e) => signal.Set();
+                server.Closed += (s, e) => signal.Set();
 
                 server.Connected += (s, e) => {
                     connectedSocket = e.Socket;
-                    connectedSignal.Set();
+                    signal.Set();
                 };
 
                 var run = server.ListenAsync(port).ConfigureAwait(false);
-                listeningSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
+
                 Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
                 Assert.Equal(port.ToString(), server.LocalEndPoint.Port);
 
                 var asyncConn = NetSocketFactory.Default.ConnectAsync("127.0.0.1", port)
                     .ContinueWith(t => clientSocket = t.Result);
-                connectedSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
 
                 Assert.NotNull(connectedSocket);
                 Assert.NotNull(connectedSocket.LocalEndPoint);
@@ -49,7 +49,8 @@ namespace Tests
                 clientSocket?.Dispose();
 
                 server.Close();
-                closedSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
             }
         }
 
@@ -58,39 +59,43 @@ namespace Tests
         {
             int port = 3001;
 
-            using (var listeningSignal = new AutoResetEvent(false))
-            using (var closedSignal = new AutoResetEvent(false))
-            using (var connectedSignal = new AutoResetEvent(false))
+            using (var signal = new AutoResetEvent(false))
             using (var server = NetSocketFactory.Default.CreateServer())
-            using (var subListening = server.OnListening().Subscribe(x => listeningSignal.Set()))
-            using (var subClosed = server.OnClosed().Subscribe(x => closedSignal.Set()))
+            using (var subListening = server.OnListening().Subscribe(x => signal.Set()))
+            using (var subClosed = server.OnClosed().Subscribe(x => signal.Set()))
             {
                 ISocket connectedSocket = null;
                 ISocket clientSocket = null;
                 
                 IDisposable subConnections = server.OnConnections().Subscribe(x => {
                     connectedSocket = x;
-                    connectedSignal.Set();
+                    signal.Set();
                 });
 
                 var run = server.ListenAsync(port).ConfigureAwait(false);
-                listeningSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
                 Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
                 Assert.Equal(port.ToString(), server.LocalEndPoint.Port);
 
                 var asyncConn = NetSocketFactory.Default.ConnectAsync("127.0.0.1", port)
                     .ContinueWith(t => clientSocket = t.Result);
-                connectedSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
 
                 Assert.NotNull(connectedSocket);
                 Assert.NotNull(connectedSocket.LocalEndPoint);
                 Assert.NotNull(connectedSocket.RemoteEndPoint);
                 connectedSocket.Close();
-                connectedSocket?.Dispose();
+                connectedSocket.Dispose();
+
+                clientSocket?.Close();
+                clientSocket?.Dispose();
 
                 subConnections.Dispose();
                 server.Close();
-                closedSignal.WaitOne(2000);
+                signal.WaitOne(2000);
+                signal.Reset();
             }
         }
     }
