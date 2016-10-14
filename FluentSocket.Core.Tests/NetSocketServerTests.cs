@@ -8,11 +8,11 @@ namespace Tests
 {
     public class NetSocketServerTests
     {
+        const int Port = 3000;
+
         [Fact]
         public void TestServer()
         {
-            int port = 3000;
-
             using (var signal = new AutoResetEvent(false))
             using (var server = NetSocketFactory.Default.CreateServer())
             {
@@ -27,26 +27,24 @@ namespace Tests
                     signal.Set();
                 };
 
-                var run = server.ListenAsync(port).ConfigureAwait(false);
+                var run = server.ListenAsync(Port);
                 signal.WaitOne(2000);
                 signal.Reset();
 
                 Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
-                Assert.Equal(port.ToString(), server.LocalEndPoint.Port);
+                Assert.Equal(Port.ToString(), server.LocalEndPoint.Port);
 
-                var asyncConn = NetSocketFactory.Default.ConnectAsync("127.0.0.1", port)
-                    .ContinueWith(t => clientSocket = t.Result);
+                clientSocket = NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port).GetAwaiter().GetResult();
                 signal.WaitOne(2000);
                 signal.Reset();
 
                 Assert.NotNull(connectedSocket);
                 Assert.NotNull(connectedSocket.LocalEndPoint);
                 Assert.NotNull(connectedSocket.RemoteEndPoint);
-                connectedSocket.Close();
-                connectedSocket?.Dispose();
+                Assert.NotNull(clientSocket);
 
-                clientSocket?.Close();
-                clientSocket?.Dispose();
+                clientSocket.Dispose();
+                connectedSocket.Dispose();
 
                 server.Close();
                 signal.WaitOne(2000);
@@ -57,8 +55,6 @@ namespace Tests
         [Fact]
         public void TestReactiveServer()
         {
-            int port = 3001;
-
             using (var signal = new AutoResetEvent(false))
             using (var server = NetSocketFactory.Default.CreateServer())
             using (var subListening = server.OnListening().Subscribe(x => signal.Set()))
@@ -72,27 +68,25 @@ namespace Tests
                     signal.Set();
                 });
 
-                var run = server.ListenAsync(port).ConfigureAwait(false);
+                var run = server.ListenAsync(Port).ConfigureAwait(false);
                 signal.WaitOne(2000);
                 signal.Reset();
                 Assert.Equal("0.0.0.0", server.LocalEndPoint.Host);
-                Assert.Equal(port.ToString(), server.LocalEndPoint.Port);
+                Assert.Equal(Port.ToString(), server.LocalEndPoint.Port);
 
-                var asyncConn = NetSocketFactory.Default.ConnectAsync("127.0.0.1", port)
-                    .ContinueWith(t => clientSocket = t.Result);
+                clientSocket = NetSocketFactory.Default.ConnectAsync("127.0.0.1", Port).GetAwaiter().GetResult();
                 signal.WaitOne(2000);
                 signal.Reset();
 
                 Assert.NotNull(connectedSocket);
                 Assert.NotNull(connectedSocket.LocalEndPoint);
                 Assert.NotNull(connectedSocket.RemoteEndPoint);
-                connectedSocket.Close();
+                Assert.NotNull(clientSocket);
+
+                clientSocket.Dispose();
                 connectedSocket.Dispose();
-
-                clientSocket?.Close();
-                clientSocket?.Dispose();
-
                 subConnections.Dispose();
+
                 server.Close();
                 signal.WaitOne(2000);
                 signal.Reset();
