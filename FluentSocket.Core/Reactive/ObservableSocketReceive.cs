@@ -63,6 +63,11 @@ namespace FluentSocket.Reactive
                             var buffer = Buffer.FromBytes(buff, 0, read);
                             ReceiveSubject.OnNext(buffer);
                         }
+                        else
+                        {
+                            ReceiveSubject.OnCompleted();
+                            return;
+                        }
                     }
                 }
             }
@@ -73,7 +78,6 @@ namespace FluentSocket.Reactive
             catch (Exception ex)
             {
                 ReceiveSubject.OnError(ex);
-                return;
             }
         }
     }
